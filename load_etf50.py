@@ -1,25 +1,59 @@
 # %%
 from bs4 import BeautifulSoup
 import pandas as pd
-
-# Parser html, from: https://www.wantgoo.com/stock/etf/0050/constituent
-with open("data/0050.html", encoding="utf-8") as fp:
-    soup = BeautifulSoup(fp, "html.parser")
+import os
 
 
-# Locate the table by find the sibling html tag which have id attribute
-first_table = soup.find(id="holdingSeason").parent.find_next_sibling("table")
-stock_tag = first_table.find_all("td")
+def scrape_etf50():
+    """Scrape the website to get the stock data for the given year.
 
-stocks = []
-for i in range(0, len(stock_tag), 8):
-    stock_id = stock_tag[i].text.strip()
-    stock_name = stock_tag[i + 1].text.strip()
-    stock_ratio = stock_tag[i + 2].text.strip()
+    Returns:
+        pd.DataFrame: The DataFrame containing the stock data.
+    """
 
-    stocks.append([stock_id, stock_name, stock_ratio])
+    # Parser html, from: https://www.wantgoo.com/stock/etf/0050/constituent
+    with open("data/0050.html", encoding="utf-8") as fp:
+        soup = BeautifulSoup(fp, "html.parser")
 
-df = pd.DataFrame(stocks, columns=["id", "name", "ratio"])
-df.to_csv("data/0050.csv", index=False)
-with open("data/0050.json", "w") as f:
-    f.write(df.to_json(orient="records"))
+    # Locate the table by find the sibling html tag which have id attribute
+    table = soup.find(id="holdingSeason").parent.find_next_sibling("table")
+
+    stocks = []
+    for row in table.find_all("tr")[4:]:
+        # Extract the columns (td elements) from the current row
+        columns = row.find_all("td")
+
+        # Extract the stock id (first column)
+        stock_id = columns[0].text.strip()
+
+        # Extract the stock name (second column)
+        stock_name = columns[1].text.strip()
+
+        # Extract the stock ratio (third column)
+        stock_ratio = columns[2].text.strip()
+
+        stocks.append([stock_id, stock_name, stock_ratio])
+
+    df = pd.DataFrame(stocks, columns=["id", "name", "ratio"])
+    df.to_csv("data/0050.csv", index=False)
+
+    return df
+
+
+def load_etf50():
+    """Load the stock data from the csv file.
+
+    Returns:
+        pd.DataFrame: The DataFrame containing the stock data.
+    """
+    if os.path.exists("data/0050.csv"):
+        df = pd.read_csv("data/0050.csv")
+    else:
+        df = scrape_etf50()
+
+    return df
+
+
+if __name__ == "__main__":
+    df = load_etf50()
+    print(df.head(10))

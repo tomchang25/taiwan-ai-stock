@@ -9,7 +9,7 @@ import csv
 from pathlib import Path
 
 
-def latest_check(x: str | date):
+def latestCheck(x: str | date):
     if isinstance(x, str):
         x = datetime.strptime(x, "%Y-%m-%d").date()
     elif not isinstance(x, datetime.date):
@@ -39,9 +39,7 @@ def latest_check(x: str | date):
             print(workday, x)
 
             if (workday - x).days < 0:
-                raise Exception(
-                    "Workday check failed: the workday is less than the data day."
-                )
+                raise Exception("Workday check failed: the workday is less than the data day.")
             elif (workday - x).days == 0:
                 return True
 
@@ -51,7 +49,7 @@ def latest_check(x: str | date):
 # %%
 
 
-latest_check("2023-04-14")
+latestCheck("2023-09-20")
 
 # %%
 stock_price_dir = "data/taiwan_stock_price"
